@@ -30,7 +30,7 @@ module RGB_LED_tb;
 
      // Generate 12 MHz clock
      always begin 
-          #4.1667 
+          #41.667 
           clk = ~clk;
      end
 
