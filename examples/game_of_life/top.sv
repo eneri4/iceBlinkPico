@@ -2,8 +2,6 @@
 `include "ws2812b.sv"
 `include "controller.sv"
 
-// led_matrix top level module
-
 module top(
     input logic     clk, 
     input logic     SW, 
@@ -28,37 +26,34 @@ module top(
 
     assign address = { pixel };
 
-    // Instance game of life for red channel
+    // Instance sample gol for green channel
     game_of_life #(
-        .INIT_FILE      ("spaceship.txt")
+        .INIT_FILE      ("initial_config/oscillator.txt")
     ) u1 (
-        .clk            (clk), 
+        .clk            (clk),
         .state          (transmit_pixel),
-        // FIX: Explicitly name the connection to 'read_address' for clarity
-        .read_address   (pixel), 
-        .read_data      (red_data)
-    );
-
-    // Instance game of life for green channel
-    game_of_life #(
-        .INIT_FILE      ("oscillator.txt")
-    ) u2 (
-        .clk            (clk), 
-        .state          (transmit_pixel),
-        // FIX: Explicitly name the connection to 'read_address' for clarity
-        .read_address   (pixel), 
+        .address        (pixel), 
         .read_data      (green_data)
     );
 
-    // Instance game of life for blue channel
+    // Instance sample gol for blue channel
     game_of_life #(
-        .INIT_FILE      ("still_life.txt")
-    ) u3 (
-        .clk            (clk), 
+        .INIT_FILE      ("initial_config/spaceship.txt")
+    ) u2 (
+        .clk            (clk),
         .state          (transmit_pixel),
-        // FIX: Explicitly name the connection to 'read_address' for clarity
-        .read_address   (pixel), 
+        .address        (pixel), 
         .read_data      (blue_data)
+    );
+
+    // Instance sample gol for red channel
+    game_of_life #(
+        .INIT_FILE      ("initial_config/still_life.txt")
+    ) u3 (
+        .clk            (clk),
+        .state          (transmit_pixel),
+        .address        (pixel), 
+        .read_data      (red_data)
     );
 
     // Instance the WS2812B output driver
