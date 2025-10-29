@@ -34,6 +34,7 @@ module top(
     ) u1 (
         .clk            (clk), 
         .state          (transmit_pixel),
+        // FIX: Explicitly name the connection to 'read_address' for clarity
         .read_address   (pixel), 
         .read_data      (red_data)
     );
@@ -44,16 +45,18 @@ module top(
     ) u2 (
         .clk            (clk), 
         .state          (transmit_pixel),
+        // FIX: Explicitly name the connection to 'read_address' for clarity
         .read_address   (pixel), 
         .read_data      (green_data)
     );
 
-    // Instance game of life for green channel
+    // Instance game of life for blue channel
     game_of_life #(
         .INIT_FILE      ("still_life.txt")
     ) u3 (
         .clk            (clk), 
         .state          (transmit_pixel),
+        // FIX: Explicitly name the connection to 'read_address' for clarity
         .read_address   (pixel), 
         .read_data      (blue_data)
     );
