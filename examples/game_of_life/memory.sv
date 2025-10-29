@@ -46,14 +46,17 @@ module memory #(
                 write_memory[(row * 64) + start_index +: 8] <= new_pixel_val;
             REPLACE:
                 begin
-                    read_memory[0] <= write_memory[0:63];
-                    read_memory[1] <= write_memory[64:127];
-                    read_memory[2] <= write_memory[127:191];
-                    read_memory[3] <= write_memory[192:255];
-                    read_memory[4] <= write_memory[256:319];
-                    read_memory[5] <= write_memory[320:383];
-                    read_memory[6] <= write_memory[384:447];
-                    read_memory[7] <= write_memory[448:511];
+                    // read_memory[0] <= write_memory[0:63];
+                    // read_memory[1] <= write_memory[64:127];
+                    // read_memory[2] <= write_memory[128:191];
+                    // read_memory[3] <= write_memory[192:255];
+                    // read_memory[4] <= write_memory[256:319];
+                    // read_memory[5] <= write_memory[320:383];
+                    // read_memory[6] <= write_memory[384:447];
+                    // read_memory[7] <= write_memory[448:511];
+                    {read_memory[7], read_memory[6], read_memory[5], read_memory[4], 
+                    read_memory[3], read_memory[2], read_memory[1], read_memory[0]
+                    } <= write_memory;
                 end
         endcase
     end

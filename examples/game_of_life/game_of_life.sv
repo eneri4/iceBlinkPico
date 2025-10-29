@@ -10,7 +10,7 @@ module game_of_life #(
 );
 
     // declare idle counter & corresponding states
-    logic [4:0] idle_counter;
+    logic [4:0] idle_register;
     localparam TRANSMIT_FRAME = 1'b0;
     localparam IDLE = 1'b1;
 
@@ -45,7 +45,7 @@ module game_of_life #(
     initial begin
         pixel_val = 8'b0;
         write_flag = WRITE;
-        transmit_idle_register = 5'b000;
+        idle_register = 5'b0;
     end
 
     memory #(
@@ -69,40 +69,40 @@ module game_of_life #(
 
         // check neighbors' status (0 if dead, 1 if alive)
         alive_neighbors[0] = (previous_line[previous_start +:8] != 0);
-        alive_neighbors[1] = (previous_line[start_index +: 8] != 0);
+        alive_neighbors[1] = (previous_line[start +: 8] != 0);
         alive_neighbors[2] = (previous_line[next_start +: 8] != 0);
         alive_neighbors[3] = (current_line[previous_start +: 8] !=0);
         alive_neighbors[4] = (current_line[next_start +: 8] !=0);
         alive_neighbors[5] = (next_line[previous_start +: 8] != 0);
-        alive_neighbors[6] = (next_line[start_index +: 8] != 0);
+        alive_neighbors[6] = (next_line[start +: 8] != 0);
         alive_neighbors[7] = (next_line[next_start +: 8] != 0);
 
         // count all alive neighbors
-        counter = $countones(neighbors);
+        count = $countones(alive_neighbors);
     end
 
     // check every clock cycle
     always_ff @(posedge clk) begin
 
-        transmit_idle_register = {transmit_idle_register, state};
+        idle_register <= {idle_register[3:0], state};
         if (write_flag == REPLACE) begin
             write_flag <= WRITE;
         end
 
         // next generation logic
-        if (counter < 2 && read_data != DEAD) begin
+        if (count < 2 && read_data != DEAD) begin
             pixel_val <= DEAD;
-        end else if ((counter == 2 || counter == 3) && read_data != DEAD) begin
+        end else if ((count == 2 || count == 3) && read_data != DEAD) begin
             pixel_val <= ALIVE; 
-        end else if (counter > 3 && read_data != DEAD) begin
+        end else if (count > 3 && read_data != DEAD) begin
             pixel_val <= DEAD; 
-        end else if (counter == 3 && read_data == DEAD) begin
+        end else if (count == 3 && read_data == DEAD) begin
             pixel_val <= ALIVE; 
         end else begin
             pixel_val <= DEAD;
         end
 
-        if (transmit_idle_register == 5'b11000) begin
+        if (idle_register == 5'b11000) begin
             write_flag <= REPLACE;
         end
 
