@@ -9,10 +9,10 @@ module top(
     output logic    _48b, 
     output logic    _45a
 );
-
-    logic [7:0] red_data;
-    logic [7:0] green_data;
-    logic [7:0] blue_data;
+    logic debug;
+    logic red_data;
+    logic green_data;
+    logic blue_data;
 
     logic [5:0] pixel;
     logic [4:0] frame;
@@ -30,8 +30,9 @@ module top(
     game_of_life #(
         .INIT_FILE      ("initial_config/oscillator.txt")
     ) u1 (
+        .debug          (debug),
         .clk            (clk),
-        .state          (transmit_pixel),
+        .load_sreg      (load_sreg),
         .address        (pixel), 
         .read_data      (green_data)
     );
@@ -40,8 +41,9 @@ module top(
     game_of_life #(
         .INIT_FILE      ("initial_config/spaceship.txt")
     ) u2 (
+        .debug          (debug),
         .clk            (clk),
-        .state          (transmit_pixel),
+        .load_sreg      (load_sreg),
         .address        (pixel), 
         .read_data      (blue_data)
     );
@@ -50,8 +52,9 @@ module top(
     game_of_life #(
         .INIT_FILE      ("initial_config/still_life.txt")
     ) u3 (
+        .debug          (debug),
         .clk            (clk),
-        .state          (transmit_pixel),
+        .load_sreg     (load_sreg),
         .address        (pixel), 
         .read_data      (red_data)
     );
@@ -75,20 +78,22 @@ module top(
     );
 
     always_ff @(posedge clk) begin
+        // if time to load another frame
         if (load_sreg) begin
             unique case ({ SW, BOOT })
                 2'b00:
-                    shift_reg <= { green_data, 16'd0 };
+                    shift_reg <= { {8{green_data}} , 16'd0 }; // repetition operator to make data 8-bit value from 0-255
                 2'b01:
-                    shift_reg <= { 8'd0, red_data, 8'd0 };
+                    shift_reg <= { 8'd0, {8{red_data}}, 8'd0 }; 
                 2'b10:
-                    shift_reg <= { 16'd0, blue_data };
+                    shift_reg <= { 16'd0, {8{blue_data}} };
                 2'b11:
-                    shift_reg <= { green_data, red_data, blue_data };
+                    shift_reg <= { {8{green_data}}, {8{red_data}}, {8{blue_data}} };
             endcase
         end
         else if (shift) begin
             shift_reg <= { shift_reg[22:0], 1'b0 };
+
         end
     end
 
