@@ -1,5 +1,5 @@
 `timescale 10ns/10ns
-// `include "top.sv"
+`include "top.sv"
 
 module game_of_life_tb;
 
@@ -8,7 +8,8 @@ module game_of_life_tb;
     logic BOOT = 1'b1;
     logic _48b, _45a;
 
-    top u0 (
+    top #(
+    ) u0 (
         .clk            (clk), 
         .SW             (SW), 
         .BOOT           (BOOT), 
@@ -19,7 +20,7 @@ module game_of_life_tb;
     initial begin
         $dumpfile("game_of_life.vcd");
         $dumpvars(0, game_of_life_tb);
-        #10000000
+        #25000000
         $finish;
     end
 

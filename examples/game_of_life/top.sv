@@ -1,6 +1,6 @@
-`include "game_of_life.sv"
-`include "ws2812b.sv"
-`include "controller.sv"
+// `include "game_of_life.sv"
+// `include "ws2812b.sv"
+// `include "controller.sv"
 
 module top(
     input logic     clk, 
@@ -9,7 +9,6 @@ module top(
     output logic    _48b, 
     output logic    _45a
 );
-    logic debug;
     logic red_data;
     logic green_data;
     logic blue_data;
@@ -24,39 +23,44 @@ module top(
     logic shift;
     logic ws2812b_out;
 
+    // logic [7:0] read_memory_out_g [7:0];
+    // logic [7:0] read_memory_out_b [7:0];
+    // logic [7:0] read_memory_out_r [7:0];
+
+    
     assign address = { pixel };
 
     // Instance sample gol for green channel
     game_of_life #(
         .INIT_FILE      ("initial_config/oscillator.txt")
     ) u1 (
-        .debug          (debug),
         .clk            (clk),
         .load_sreg      (load_sreg),
         .address        (pixel), 
         .read_data      (green_data)
+        // .read_memory    (read_memory_out_g)
     );
 
     // Instance sample gol for blue channel
     game_of_life #(
         .INIT_FILE      ("initial_config/spaceship.txt")
     ) u2 (
-        .debug          (debug),
         .clk            (clk),
         .load_sreg      (load_sreg),
         .address        (pixel), 
         .read_data      (blue_data)
+        // .read_memory    (read_memory_out_b)
     );
 
     // Instance sample gol for red channel
     game_of_life #(
         .INIT_FILE      ("initial_config/still_life.txt")
     ) u3 (
-        .debug          (debug),
         .clk            (clk),
-        .load_sreg     (load_sreg),
+        .load_sreg      (load_sreg),
         .address        (pixel), 
         .read_data      (red_data)
+        // .read_memory    (read_memory_out_r)
     );
 
     // Instance the WS2812B output driver

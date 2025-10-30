@@ -15,7 +15,7 @@ module controller (
     localparam [2:0] TRANSMIT_PIXEL = 3'b100;
 
     localparam [8:0] TRANSMIT_CYCLES    = 9'd360;       // = 24 bits / pixel x 15 cycles / bit
-    localparam [19:0] IDLE_CYCLES       = 20'd351832;   // = 375000 - 64 x (360 + 2) for 32 frames / second
+    localparam [19:0] IDLE_CYCLES       = 20'b11111111101111111110;  // # of clock cycles in each frame for ~11 FPS
 
     logic state = TRANSMIT_FRAME;
     logic next_state;

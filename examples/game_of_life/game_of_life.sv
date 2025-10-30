@@ -1,9 +1,6 @@
-`include "memory.sv"
-
 module game_of_life #(
     parameter INIT_FILE = ""
 )(
-    output logic debug,
     input logic clk,
     // input logic state,
     input logic load_sreg,
@@ -11,19 +8,18 @@ module game_of_life #(
     output logic read_data // 1 bit to represent MAX or MIN brightness
 );
 
-    // declare idle counter & corresponding states
-    // logic [4:0] idle_register;
-
     // declare memory module logic
-    logic [1:0] write_flag;
-    logic pixel_val; // 1 bit to represent MAX or MIN brightness
-    logic [7:0] current_line;
-    logic [7:0] previous_line;
-    logic [7:0] next_line;
+    logic [7:0] read_memory [7:0];
+    // logic [7:0] initial_write_memory [7:0];
+    logic [63:0] write_memory; 
 
     // read and write params for memory
+    logic [1:0] write_flag;
     localparam [1:0] WRITE = 2'b01;
     localparam [1:0] REPLACE = 2'b10;
+
+    logic new_pixel_val; // 1 bit to represent MAX or MIN brightness
+
 
     // neighbor and cell status logic
     logic [2:0] count;
@@ -32,74 +28,89 @@ module game_of_life #(
     localparam ALIVE = 1'b1;
 
     // indexing neighbors logic
-    logic [2:0] row; 
+    logic [2:0] row;
     assign row = address[5:3];
     logic [2:0] column;
     assign column = address[2:0];
+
+    logic [7:0] current_line;
+    logic [7:0] previous_line;
+    logic [7:0] next_line;
+ 
     
-    logic [3:0] start, previous_start,next_start;
-    assign start = column;
-    assign previous_start = (start == 0) ? 7 : start - 1;
-    assign next_start = (start == 7) ? 0 : start + 1;
+    logic [2:0] current_col, previous_col, next_col;
+    assign current_col = column;
+    assign previous_col = (current_col == 0) ? 7 : current_col - 1;
+    assign next_col = (current_col == 7) ? 0 : current_col + 1;
 
     initial begin
-        pixel_val = 1'b0;
+
+        $readmemb(INIT_FILE, read_memory);
+        // $readmemb(INIT_FILE, initial_write_memory);  
+
+        new_pixel_val = 1'b0;
         write_flag = WRITE;
-        idle_register = 5'b0;
+
     end
 
-    memory #(
-        .INIT_FILE              (INIT_FILE)
-    ) mem (
-        .clk                    (clk),
-        .write_flag             (write_flag),
-        .pixel                  (address),
-        .new_pixel_val          (pixel_val),
-        .current_pixel_val      (read_data),
-        .current_line           (current_line),
-        .previous_line          (previous_line),
-        .next_line              (next_line)
-    );
+    // update pixel value
+    always_ff @(negedge clk) begin
+        
+        current_line = read_memory[row];
+        previous_line = (row == 0)? read_memory[7] : read_memory[row-1];
+        next_line = (row == 7)? read_memory[0] : read_memory[row+1];
+        read_data = read_memory[row][column];
 
-    // check whenever mem outputs updated
-    always_comb begin
         // reset for new frame
         count = 3'b000;
         alive_neighbors = 8'b0;
 
         // check neighbors' status (0 if dead, 1 if alive)
-        alive_neighbors[0] = (previous_line[previous_start] != 0);
-        alive_neighbors[1] = (previous_line[start] != 0);
-        alive_neighbors[2] = (previous_line[next_start] != 0);
-        alive_neighbors[3] = (current_line[previous_start] !=0);
-        alive_neighbors[4] = (current_line[next_start] !=0);
-        alive_neighbors[5] = (next_line[previous_start] != 0);
-        alive_neighbors[6] = (next_line[start] != 0);
-        alive_neighbors[7] = (next_line[next_start] != 0);
+        alive_neighbors[0] = (previous_line[previous_col] != 0);
+        alive_neighbors[1] = (previous_line[current_col] != 0);
+        alive_neighbors[2] = (previous_line[next_col] != 0);
+        alive_neighbors[3] = (current_line[previous_col] !=0);
+        alive_neighbors[4] = (current_line[next_col] !=0);
+        alive_neighbors[5] = (next_line[previous_col] != 0);
+        alive_neighbors[6] = (next_line[current_col] != 0);
+        alive_neighbors[7] = (next_line[next_col] != 0);
 
         // count all alive neighbors
-        count = $countones(alive_neighbors);
+        count = alive_neighbors[0] + alive_neighbors[1] + alive_neighbors[2] + alive_neighbors[3] + alive_neighbors[4] + alive_neighbors[5] + alive_neighbors[6] + alive_neighbors[7];
+
+        // compute new state of pixel
+        if (read_memory[row][column]) begin
+            new_pixel_val = (count == 2 || count == 3);
+        end else begin
+            new_pixel_val = (count == 3);
+        end
 
     end
 
-
-    // check every clock cycle
+    //update memories
     always_ff @(posedge clk) begin
 
-        if (address == 6'd63) begin
-            write_flag <= REPLACE;
-        end else if (load_sreg) begin
-            write_flag <= WRITE;
+        if (load_sreg) begin
+            if (address == 6'd63) begin
+                write_flag <= REPLACE;  // replace old memory (frame) after last pixel
+            end else begin
+                write_flag <= WRITE;     // continue writing to buffer for any other pixel
+            end
         end
+        
+        case (write_flag)
+            WRITE: 
+                write_memory[(row*8)+column] <= new_pixel_val;
+            REPLACE: begin
+                {read_memory[7], read_memory[6], read_memory[5], read_memory[4], 
+                read_memory[3], read_memory[2], read_memory[1], read_memory[0]
+                } <= write_memory;
+            end
+            default:
+                write_memory[(row*8)+column] <= new_pixel_val;
 
-        if (read_data) begin
-            pixel_val <= (count == 2 || count == 3);
-        end else begin
-            pixel_val <= (count == 3);
-        end
+        endcase
 
-
-    end        
-
+    end
 
 endmodule
