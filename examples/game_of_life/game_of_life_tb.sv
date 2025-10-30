@@ -8,8 +8,7 @@ module game_of_life_tb;
     logic BOOT = 1'b1;
     logic _48b, _45a;
 
-    top #(
-    ) u0 (
+    top u0 (
         .clk            (clk), 
         .SW             (SW), 
         .BOOT           (BOOT), 

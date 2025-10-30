@@ -1,6 +1,6 @@
-// `include "game_of_life.sv"
-// `include "ws2812b.sv"
-// `include "controller.sv"
+`include "game_of_life.sv"
+`include "ws2812b.sv"
+`include "controller.sv"
 
 module top(
     input logic     clk, 
@@ -23,11 +23,7 @@ module top(
     logic shift;
     logic ws2812b_out;
 
-    // logic [7:0] read_memory_out_g [7:0];
-    // logic [7:0] read_memory_out_b [7:0];
-    // logic [7:0] read_memory_out_r [7:0];
 
-    
     assign address = { pixel };
 
     // Instance sample gol for green channel

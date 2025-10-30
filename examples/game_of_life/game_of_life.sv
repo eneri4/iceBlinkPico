@@ -46,7 +46,6 @@ module game_of_life #(
     initial begin
 
         $readmemb(INIT_FILE, read_memory);
-        // $readmemb(INIT_FILE, initial_write_memory);  
 
         new_pixel_val = 1'b0;
         write_flag = WRITE;
